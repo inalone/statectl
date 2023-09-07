@@ -1,0 +1,64 @@
+#!/bin/sh
+
+ACTION="$1"
+MODIFIER="$2"
+
+CONFIG_DIR="${XDG_CONFIG_DIR:-$HOME/.config}/statectl"
+
+fail() {
+	echo "$1"
+	exit 1
+}
+
+execute_action() {
+	echo "$1" > /sys/power/state || fail "Failed to $ACTION."
+}
+
+# actions
+hibernate() {
+	grep -q disk /sys/power/state || fail "Hibernate is not enabled on your machine."
+	[ -f "$CONFIG_DIR/hibernate_mode" ] && cat "$CONFIG_DIR/hibernate_mode" > /sys/power/disk
+	[ "$MODIFIER" ] && echo "$MODIFIER" > /sys/power/disk
+	execute_action disk
+}
+
+poweroff() {
+	# TODO: make more sophisticated
+	shutdown
+}
+
+standby() {
+	execute_action freeze
+}
+
+suspend() {
+	grep -q mem /sys/power/state || fail "Suspend is not enabled on your machine."
+	execute_action mem
+}
+
+suspend_then_hibernate() {
+	# TODO: clean up, this can surely be made more succint
+	HIBERNATE_AFTER="30 minutes"
+	[ -f "$CONFIG_DIR/hibernate_after" ] && HIBERNATE_AFTER=$(cat "$CONFIG_DIR"/hibernate_after)
+	[ "$MODIFIER" ] && HIBERNATE_AFTER="$MODIFIER"
+
+	# TODO: check for RTC rather than just assume
+	echo 0 > /sys/class/rtc/rtc0/wakealarm
+	date '+%s' -d "+ $HIBERNATE_AFTER" > /sys/class/rtc/rtc0/wakealarm
+
+	suspend
+	hibernate
+}
+
+# main
+test -w /sys/power/state || fail "You have insufficient permissions to run this script."
+
+case "$ACTION" in
+	"hibernate" | "poweroff" | "standby" | "suspend" | "suspend_then_hibernate" )
+		$ACTION
+		;;
+	* )
+		echo "$ACTION is not a supported action."
+		printf "Supported actions are:\n\t- hibernate\n\t- poweroff\n\t- suspend\n\t- suspend_then_hibernate\n"
+		;;
+esac
