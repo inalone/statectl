@@ -61,7 +61,7 @@ action_suspend_then_hibernate() {
 test -w /sys/power/state || fail "You have insufficient permissions to run this script."
 
 case "$ACTION" in
-	"hibernate" | "poweroff" | "restart" | "standby" | "suspend" | "suspend_then_hibernate" )
+	"hibernate" | "poweroff" | "reboot" | "standby" | "suspend" | "suspend_then_hibernate" )
 		eval "action_$ACTION"
 		;;
 	* )
