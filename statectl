@@ -14,37 +14,36 @@ execute_action() {
 	echo "$1" > /sys/power/state || fail "Failed to $ACTION."
 }
 
-# actions
-hibernate() {
+action_hibernate() {
 	grep -q disk /sys/power/state || fail "Hibernate is not enabled on your machine."
 	[ -f "$CONFIG_DIR/hibernate_mode" ] && cat "$CONFIG_DIR/hibernate_mode" > /sys/power/disk
 	[ "$MODIFIER" ] && echo "$MODIFIER" > /sys/power/disk
 	execute_action disk
 }
 
-poweroff() {
+action_poweroff() {
 	# TODO: make more sophisticated
 	shutdown
 }
 
-reboot() {
+action_reboot() {
 	reboot
 }
 
-standby() {
+action_standby() {
 	execute_action freeze
 }
 
-standby() {
+action_standby() {
 	execute_action freeze
 }
 
-suspend() {
+action_suspend() {
 	grep -q mem /sys/power/state || fail "Suspend is not enabled on your machine."
 	execute_action mem
 }
 
-suspend_then_hibernate() {
+action_suspend_then_hibernate() {
 	# TODO: clean up, this can surely be made more succint
 	HIBERNATE_AFTER="30 minutes"
 	[ -f "$CONFIG_DIR/hibernate_after" ] && HIBERNATE_AFTER=$(cat "$CONFIG_DIR"/hibernate_after)
@@ -63,7 +62,7 @@ test -w /sys/power/state || fail "You have insufficient permissions to run this 
 
 case "$ACTION" in
 	"hibernate" | "poweroff" | "restart" | "standby" | "suspend" | "suspend_then_hibernate" )
-		$ACTION
+		eval "action_$ACTION"
 		;;
 	* )
 		echo "$ACTION is not a supported action."
