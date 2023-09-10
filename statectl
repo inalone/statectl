@@ -27,6 +27,14 @@ poweroff() {
 	shutdown
 }
 
+reboot() {
+	reboot
+}
+
+standby() {
+	execute_action freeze
+}
+
 standby() {
 	execute_action freeze
 }
@@ -54,7 +62,7 @@ suspend_then_hibernate() {
 test -w /sys/power/state || fail "You have insufficient permissions to run this script."
 
 case "$ACTION" in
-	"hibernate" | "poweroff" | "standby" | "suspend" | "suspend_then_hibernate" )
+	"hibernate" | "poweroff" | "restart" | "standby" | "suspend" | "suspend_then_hibernate" )
 		$ACTION
 		;;
 	* )
