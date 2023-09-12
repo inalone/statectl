@@ -35,10 +35,6 @@ action_standby() {
 	execute_action freeze
 }
 
-action_standby() {
-	execute_action freeze
-}
-
 action_suspend() {
 	grep -q mem /sys/power/state || fail "Suspend is not enabled on your machine."
 	execute_action mem
