@@ -3,7 +3,7 @@
 ACTION="$1"
 MODIFIER="$2"
 
-CONFIG_DIR="${XDG_CONFIG_DIR:-$HOME/.config}/statectl"
+CONFIG_DIR="/etc/statectl"
 
 fail() {
 	echo "$1"
