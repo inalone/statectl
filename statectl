@@ -41,8 +41,7 @@ action_suspend() {
 }
 
 action_suspend_then_hibernate() {
-	# TODO: clean up, this can surely be made more succint
-	HIBERNATE_AFTER="30 minutes"
+	local HIBERNATE_AFTER="30 minutes"
 	[ -f "$CONFIG_DIR/hibernate_after" ] && HIBERNATE_AFTER=$(cat "$CONFIG_DIR"/hibernate_after)
 	[ "$MODIFIER" ] && HIBERNATE_AFTER="$MODIFIER"
 
