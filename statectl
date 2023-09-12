@@ -17,6 +17,7 @@ execute_action() {
 action_hibernate() {
 	grep -q disk /sys/power/state || fail "Hibernate is not enabled on your machine."
 	[ -f "$CONFIG_DIR/hibernate_mode" ] && cat "$CONFIG_DIR/hibernate_mode" > /sys/power/disk
+	# TODO: suspend then hibernate with parameter will cause an error here
 	[ "$MODIFIER" ] && echo "$MODIFIER" > /sys/power/disk
 	execute_action disk
 }
@@ -50,11 +51,12 @@ action_suspend_then_hibernate() {
 	[ "$MODIFIER" ] && HIBERNATE_AFTER="$MODIFIER"
 
 	# TODO: check for RTC rather than just assume
+	local HIBERNATE_AFTER_TIMESTAMP=$(date '+%s' -d "+ $HIBERNATE_AFTER")
 	echo 0 > /sys/class/rtc/rtc0/wakealarm
-	date '+%s' -d "+ $HIBERNATE_AFTER" > /sys/class/rtc/rtc0/wakealarm
+	echo "$HIBERNATE_AFTER_TIMESTAMP" > /sys/class/rtc/rtc0/wakealarm
 
 	action_suspend
-	[ "$(date '+%s')" -ge "$(cat /sys/class/rtc/rtc0/wakealarm)" ] && action_hibernate
+	[ "$(date '+%s')" -ge "$HIBERNATE_AFTER_TIMESTAMP" ] && action_hibernate
 	echo 0 > /sys/class/rtc/rtc0/wakealarm
 }
 
