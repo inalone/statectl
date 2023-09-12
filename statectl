@@ -53,8 +53,9 @@ action_suspend_then_hibernate() {
 	echo 0 > /sys/class/rtc/rtc0/wakealarm
 	date '+%s' -d "+ $HIBERNATE_AFTER" > /sys/class/rtc/rtc0/wakealarm
 
-	suspend
-	hibernate
+	action_suspend
+	[ "$(date '+%s')" -ge "$(cat /sys/class/rtc/rtc0/wakealarm)" ] && action_hibernate
+	echo 0 > /sys/class/rtc/rtc0/wakealarm
 }
 
 # main
@@ -66,6 +67,6 @@ case "$ACTION" in
 		;;
 	* )
 		echo "$ACTION is not a supported action."
-		printf "Supported actions are:\n\t- hibernate\n\t- poweroff\n\t- suspend\n\t- suspend_then_hibernate\n"
+		printf "Supported actions are:\n\t- hibernate\n\t- poweroff\n\t- reboot\n\t- suspend\n\t- suspend_then_hibernate\n"
 		;;
 esac
