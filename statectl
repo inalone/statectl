@@ -4,6 +4,7 @@ ACTION="$1"
 MODIFIER="$2"
 
 CONFIG_DIR="/etc/statectl"
+SUSPEND_THEN_HIBERNATE_LOCK="/tmp/suspend_then_hibernate.lock"
 
 fail() {
 	echo "$1"
@@ -15,6 +16,8 @@ execute_action() {
 }
 
 action_hibernate() {
+	echo "Hibernating system"
+
 	grep -q disk /sys/power/state || fail "Hibernate is not enabled on your machine."
 	[ -f "$CONFIG_DIR/hibernate_mode" ] && cat "$CONFIG_DIR/hibernate_mode" > /sys/power/disk
 	# TODO: suspend then hibernate with parameter will cause an error here
@@ -23,28 +26,37 @@ action_hibernate() {
 }
 
 action_poweroff() {
+	echo "Powering off system"
 	# TODO: make more sophisticated
-	poweroff
+	shutdown -p now
 }
 
 action_reboot() {
+	echo "Rebooting system"
 	reboot
 }
 
 action_standby() {
+	echo "Putting system into standby"
 	execute_action freeze
 }
 
 action_suspend() {
+	echo "Suspending system"
 	grep -q mem /sys/power/state || fail "Suspend is not enabled on your machine."
 	execute_action mem
 }
 
 action_suspend_then_hibernate() {
+	[ -f "$SUSPEND_THEN_HIBERNATE_LOCK" ] && fail "Suspend then hibernate already in progress"
+
 	local HIBERNATE_AFTER="30 minutes"
 	[ -f "$CONFIG_DIR/hibernate_after" ] && HIBERNATE_AFTER=$(cat "$CONFIG_DIR"/hibernate_after)
 	[ "$MODIFIER" ] && HIBERNATE_AFTER="$MODIFIER"
 
+	echo "Suspending then hibernating system after $HIBERNATE_AFTER"
+
+	touch "$SUSPEND_THEN_HIBERNATE_LOCK"
 	# TODO: check for RTC rather than just assume
 	local HIBERNATE_AFTER_TIMESTAMP=$(date '+%s' -d "+ $HIBERNATE_AFTER")
 	echo 0 > /sys/class/rtc/rtc0/wakealarm
@@ -52,7 +64,7 @@ action_suspend_then_hibernate() {
 
 	action_suspend
 	[ "$(date '+%s')" -ge "$HIBERNATE_AFTER_TIMESTAMP" ] && action_hibernate
-	echo 0 > /sys/class/rtc/rtc0/wakealarm
+	rm "$SUSPEND_THEN_HIBERNATE_LOCK"
 }
 
 # main
