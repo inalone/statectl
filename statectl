@@ -24,7 +24,7 @@ action_hibernate() {
 
 action_poweroff() {
 	# TODO: make more sophisticated
-	shutdown
+	poweroff
 }
 
 action_reboot() {
