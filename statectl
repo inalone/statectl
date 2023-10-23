@@ -25,7 +25,7 @@ action_hibernate() {
 
 action_poweroff() {
 	# TODO: make more sophisticated
-	shutdown -p now
+	shutdown -P now
 }
 
 action_reboot() {
